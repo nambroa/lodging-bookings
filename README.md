@@ -1,5 +1,10 @@
 # lodging-bookings
 
+- Built using Go 1.19
+- Uses [chi router](github.com/go-chi/chi/v5) for routing.
+- Uses [Alex E. SCS](github.com/alexedwards/scs/v2) for managing sessions.
+- Uses [noSurf](github.com/justinas/nosurf) to prevent CSRF attacks.
+
 ## Main Goals
 
 - A Bed & Breakfast with 2 rooms.
