@@ -40,3 +40,27 @@ func (m *Repository) About(w http.ResponseWriter, r *http.Request) {
 	stringMap := map[string]string{"test": "Hello, Again."}
 	render.RenderTemplate(w, "about.page.gohtml", &models.TemplateData{StringMap: stringMap})
 }
+
+// Majors is the Majors Suite page handler. Renders the room page.
+func (m *Repository) Majors(w http.ResponseWriter, r *http.Request) {
+	stringMap := map[string]string{"test": "Hello, Again."}
+	render.RenderTemplate(w, "majors.page.gohtml", &models.TemplateData{StringMap: stringMap})
+}
+
+// Generals is the Generals Quarters page handler. Renders the room page.
+func (m *Repository) Generals(w http.ResponseWriter, r *http.Request) {
+	stringMap := map[string]string{"test": "Hello, Again."}
+	render.RenderTemplate(w, "generals.page.gohtml", &models.TemplateData{StringMap: stringMap})
+}
+
+// Availability is the search availability page handler.
+func (m *Repository) Availability(w http.ResponseWriter, r *http.Request) {
+	stringMap := map[string]string{"test": "Hello, Again."}
+	render.RenderTemplate(w, "search-availability.page.gohtml", &models.TemplateData{StringMap: stringMap})
+}
+
+// Contact is the contact page handler.
+func (m *Repository) Contact(w http.ResponseWriter, r *http.Request) {
+	stringMap := map[string]string{"test": "Hello, Again."}
+	render.RenderTemplate(w, "contact.page.gohtml", &models.TemplateData{StringMap: stringMap})
+}
