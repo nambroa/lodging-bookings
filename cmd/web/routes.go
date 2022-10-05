@@ -3,8 +3,8 @@ package main
 import (
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
-	"github.com/nambroa/lodging-bookings/pkg/config"
-	"github.com/nambroa/lodging-bookings/pkg/handlers"
+	"github.com/nambroa/lodging-bookings/internal/config"
+	"github.com/nambroa/lodging-bookings/internal/handlers"
 	"net/http"
 )
 

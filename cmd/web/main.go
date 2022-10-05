@@ -3,9 +3,9 @@ package main
 import (
 	"fmt"
 	"github.com/alexedwards/scs/v2"
-	"github.com/nambroa/lodging-bookings/pkg/config"
-	"github.com/nambroa/lodging-bookings/pkg/handlers"
-	render "github.com/nambroa/lodging-bookings/pkg/render"
+	"github.com/nambroa/lodging-bookings/internal/config"
+	"github.com/nambroa/lodging-bookings/internal/handlers"
+	"github.com/nambroa/lodging-bookings/internal/render"
 	"log"
 	"net/http"
 	"time"

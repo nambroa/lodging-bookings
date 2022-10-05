@@ -3,9 +3,9 @@ package handlers
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/nambroa/lodging-bookings/pkg/config"
-	"github.com/nambroa/lodging-bookings/pkg/models"
-	"github.com/nambroa/lodging-bookings/pkg/render"
+	"github.com/nambroa/lodging-bookings/internal/config"
+	"github.com/nambroa/lodging-bookings/internal/models"
+	"github.com/nambroa/lodging-bookings/internal/render"
 	"log"
 	"net/http"
 )
