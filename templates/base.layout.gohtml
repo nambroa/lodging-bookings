@@ -10,7 +10,8 @@
 
         <!-- CSS only -->
         <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.1/dist/css/bootstrap.min.css" rel="stylesheet"
-              integrity="sha384-iYQeCzEYFbKjA/T2uDLTpkwGzCiq6soy8tYaI1GyVh/UjpbCx/TYkiZhlZB6+fzT" crossorigin="anonymous">
+              integrity="sha384-iYQeCzEYFbKjA/T2uDLTpkwGzCiq6soy8tYaI1GyVh/UjpbCx/TYkiZhlZB6+fzT"
+              crossorigin="anonymous">
         <link rel="stylesheet"
               href="https://cdn.jsdelivr.net/npm/vanillajs-datepicker@1.2.0/dist/css/datepicker-bs5.min.css">
         <link rel="stylesheet" type="text/css" href="https://unpkg.com/notie/dist/notie.min.css">
@@ -23,7 +24,9 @@
     <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
         <div class="container-fluid">
             <a class="navbar-brand" href="#">Navbar</a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse"
+                    data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent"
+                    aria-expanded="false" aria-label="Toggle navigation">
                 <span class="navbar-toggler-icon"></span>
             </button>
             <div class="collapse navbar-collapse" id="navbarSupportedContent">
@@ -35,13 +38,16 @@
                         <a class="nav-link" href="/about">About</a>
                     </li>
                     <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                        <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button"
+                           data-bs-toggle="dropdown" aria-expanded="false">
                             Rooms
                         </a>
                         <ul class="dropdown-menu" aria-labelledby="navbarDropdown">
                             <li><a class="dropdown-item" href="/generals-quarters">Generals Quarters</a></li>
                             <li><a class="dropdown-item" href="/majors-suite">Majors Suite</a></li>
-                            <li><hr class="dropdown-divider"></li>
+                            <li>
+                                <hr class="dropdown-divider">
+                            </li>
                             <li><a class="dropdown-item" href="#">Something else here</a></li>
                         </ul>
                     </li>
@@ -77,7 +83,6 @@
     </footer>
 
     </body>
-
 
 
     <!-- JavaScript Bundle with Popper -->
@@ -184,25 +189,24 @@
                 })
             }
 
+            // Modal open function. Name is custom due to the original Go course's lectures, but I will change it
+            // in the future.
             async function custom(c) {
                 const {
                     msg = "",
                     title = "",
                 } = c
 
-                const {value: formValues} = await Swal.fire({
+                const {value: result} = await Swal.fire({
                     title: title,
                     html: msg,
                     backdrop: false,
                     showCancelButton: true,
                     focusConfirm: false,
                     willOpen: () => {
-                        const elem = document.getElementById("reservation-dates-modal");
-                        const rp = new DateRangePicker(elem, {
-                            format: 'yyyy-mm-dd',
-                            showOnFocus: true,
-                            orientation: 'top'
-                        })
+                        if (c.willOpen !== undefined) {
+                            c.willOpen()
+                        }
                     },
                     preConfirm: () => {
                         return [
@@ -211,16 +215,25 @@
                         ]
                     },
                     didOpen: () => {
-                        // Inputs are disabled so that the datepicker does not auto open when modal opens.
-                        // After modal is opened, we remove the disabled attribute since it's no longer needed.
-                        document.getElementById('start').removeAttribute('disabled');
-                        document.getElementById('end').removeAttribute('disabled');
-
+                        if (c.didOpen !== undefined) {
+                            c.didOpen()
+                        }
                     }
                 })
 
-                if (formValues) {
-                    Swal.fire(JSON.stringify(formValues))
+                if (result) {
+                    // If the user did not hit the cancel button in the modal. !== means EXACTLY.
+                    if (result.dismiss !== Swal.DismissReason.cancel) {
+                        if (result !== "") {
+                            if (c.callback !== undefined) {
+                                c.callback(result)
+                            }
+                        } else {
+                            c.callback(false);
+                        }
+                    } else {
+                        c.callback(false);
+                    }
                 }
             }
 
