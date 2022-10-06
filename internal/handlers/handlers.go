@@ -62,8 +62,13 @@ func (m *Repository) Contact(w http.ResponseWriter, r *http.Request) {
 
 // Reservation is the Make Reservation page handler.
 func (m *Repository) Reservation(w http.ResponseWriter, r *http.Request) {
+	var emptyReservation models.Reservation
+	data := make(map[string]interface{})
+	data["reservation"] = emptyReservation // must be same key as reservation is called in PostReservation.
+
 	render.RenderTemplate(w, r, "make-reservation.page.gohtml", &models.TemplateData{
 		Form: forms.New(nil),
+		Data: data,
 	})
 }
 
@@ -83,7 +88,12 @@ func (m *Repository) PostReservation(w http.ResponseWriter, r *http.Request) {
 	}
 
 	form := forms.New(r.PostForm)
-	form.Has("first_name", r)
+
+	form.Required("first_name", "last_name", "email")
+	form.MinLength("first_name", 3, r)
+	form.IsEmail("email")
+	
+	// If form is invalid, repopulate the fields of the reservation so the user only needs to type the errored fields.
 	if !form.Valid() {
 		data := make(map[string]interface{})
 		data["reservation"] = reservation
