@@ -23,6 +23,12 @@ func NewTemplates(aConfig *config.AppConfig) {
 }
 func AddDefaultData(templateData *models.TemplateData, r *http.Request) *models.TemplateData {
 	templateData.CSRFToken = nosurf.Token(r)
+	// PopString since you want to show these messages only once to the user.
+	// PopString removes it from the session after returning.
+	templateData.Flash = app.Session.PopString(r.Context(), "flash")
+	templateData.Error = app.Session.PopString(r.Context(), "error")
+	templateData.Warning = app.Session.PopString(r.Context(), "warning")
+
 	return templateData
 }
 

@@ -134,6 +134,18 @@
             })
         }
 
+        // Error is the name of the variable in TemplateData.
+        {{with .Error}}
+        notify("{{.}}", "error")
+        {{end}}
+
+        {{with .Flash}}
+        notify("{{.}}", "success")
+        {{end}}
+
+        {{with .Warning}}
+        notify("{{.}}", "warning")
+        {{end}}
 
         function Prompt() {
 

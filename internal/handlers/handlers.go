@@ -111,12 +111,21 @@ func (m *Repository) PostReservation(w http.ResponseWriter, r *http.Request) {
 }
 
 func (m *Repository) ReservationSummary(w http.ResponseWriter, r *http.Request) {
+	// Take reservation info from the session.
 	// Last part of the line is type assertion aka casting, since Get method returns interface.
 	reservation, ok := m.App.Session.Get(r.Context(), "reservation").(models.Reservation)
+
+	// Check if reservation was obtained properly. Otherwise display error to the user.
 	if !ok {
 		log.Println("Cannot get item from session.")
+		// We put an error message to be extracted in render method AddDefaultData to show to the user.
+		m.App.Session.Put(r.Context(), "error", "Can't get reservation from session.")
+		http.Redirect(w, r, "/", http.StatusTemporaryRedirect)
 		return
 	}
+
+	// Store reservation in TemplateData and delete it from the session to improve privacy.
+	m.App.Session.Remove(r.Context(), "reservation")
 	data := map[string]interface{}{"reservation": reservation}
 	render.RenderTemplate(w, r, "reservation-summary.page.gohtml", &models.TemplateData{Data: data})
 
