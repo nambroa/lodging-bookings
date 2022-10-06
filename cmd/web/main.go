@@ -1,10 +1,12 @@
 package main
 
 import (
+	"encoding/gob"
 	"fmt"
 	"github.com/alexedwards/scs/v2"
 	"github.com/nambroa/lodging-bookings/internal/config"
 	"github.com/nambroa/lodging-bookings/internal/handlers"
+	"github.com/nambroa/lodging-bookings/internal/models"
 	"github.com/nambroa/lodging-bookings/internal/render"
 	"log"
 	"net/http"
@@ -17,6 +19,10 @@ var app config.AppConfig
 var session *scs.SessionManager
 
 func main() {
+	// Types that will be stored in the session object (encoded in the session object).
+	gob.Register(models.Reservation{})
+
+	// Change this to true when in production.
 	app.InProduction = false
 
 	session = scs.New()

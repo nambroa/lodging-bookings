@@ -13,13 +13,13 @@ import (
 
 // Repository pattern used to share the appConfig with the handlers.
 
-// Repo is used by the handlers.
-var Repo *Repository
-
 // Repository is the repository type.
 type Repository struct {
 	App *config.AppConfig
 }
+
+// Repo is used by the handlers.
+var Repo *Repository
 
 // NewRepo creates a new repository with the content being the app config instance.
 func NewRepo(appConfig *config.AppConfig) *Repository {
@@ -63,8 +63,7 @@ func (m *Repository) Contact(w http.ResponseWriter, r *http.Request) {
 // Reservation is the Make Reservation page handler.
 func (m *Repository) Reservation(w http.ResponseWriter, r *http.Request) {
 	var emptyReservation models.Reservation
-	data := make(map[string]interface{})
-	data["reservation"] = emptyReservation // must be same key as reservation is called in PostReservation.
+	data := map[string]interface{}{"reservation": emptyReservation} // must be same key as reservation is called in PostReservation.
 
 	render.RenderTemplate(w, r, "make-reservation.page.gohtml", &models.TemplateData{
 		Form: forms.New(nil),
@@ -92,11 +91,10 @@ func (m *Repository) PostReservation(w http.ResponseWriter, r *http.Request) {
 	form.Required("first_name", "last_name", "email")
 	form.MinLength("first_name", 3, r)
 	form.IsEmail("email")
-	
+
 	// If form is invalid, repopulate the fields of the reservation so the user only needs to type the errored fields.
 	if !form.Valid() {
-		data := make(map[string]interface{})
-		data["reservation"] = reservation
+		data := map[string]interface{}{"reservation": reservation}
 
 		render.RenderTemplate(w, r, "make-reservation.page.gohtml", &models.TemplateData{
 			Form: form,
@@ -104,6 +102,23 @@ func (m *Repository) PostReservation(w http.ResponseWriter, r *http.Request) {
 		})
 		return
 	}
+
+	// Put the reservation info into the session to show later in the summary.
+	m.App.Session.Put(r.Context(), "reservation", reservation)
+
+	http.Redirect(w, r, "/reservation-summary", http.StatusSeeOther)
+
+}
+
+func (m *Repository) ReservationSummary(w http.ResponseWriter, r *http.Request) {
+	// Last part of the line is type assertion aka casting, since Get method returns interface.
+	reservation, ok := m.App.Session.Get(r.Context(), "reservation").(models.Reservation)
+	if !ok {
+		log.Println("Cannot get item from session.")
+		return
+	}
+	data := map[string]interface{}{"reservation": reservation}
+	render.RenderTemplate(w, r, "reservation-summary.page.gohtml", &models.TemplateData{Data: data})
 
 }
 
