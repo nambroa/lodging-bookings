@@ -6,6 +6,7 @@ import (
 	"testing"
 )
 
+// Gets called before any of our tests run. Before it closes, it runs the tests.
 func TestMain(m *testing.M) {
 
 	os.Exit(m.Run())
