@@ -3,6 +3,7 @@ package render
 // All the files for a package must exist on the same directory
 import (
 	"bytes"
+	"errors"
 	"fmt"
 	"github.com/justinas/nosurf"
 	"github.com/nambroa/lodging-bookings/internal/config"
@@ -17,6 +18,8 @@ var functions = template.FuncMap{}
 
 var app *config.AppConfig
 
+var pathToTemplates = "./templates"
+
 // NewTemplates sets the config for the template package.
 func NewTemplates(aConfig *config.AppConfig) {
 	app = aConfig
@@ -25,6 +28,7 @@ func AddDefaultData(templateData *models.TemplateData, r *http.Request) *models.
 	templateData.CSRFToken = nosurf.Token(r)
 	// PopString since you want to show these messages only once to the user.
 	// PopString removes it from the session after returning.
+	// Example line that adds data = m.App.Session.Put(r.Context(), "error", "Can't get reservation from session.")
 	templateData.Flash = app.Session.PopString(r.Context(), "flash")
 	templateData.Error = app.Session.PopString(r.Context(), "error")
 	templateData.Warning = app.Session.PopString(r.Context(), "warning")
@@ -33,12 +37,12 @@ func AddDefaultData(templateData *models.TemplateData, r *http.Request) *models.
 }
 
 // RenderTemplate renders a specific html template to the writer w with filename ending in tmpl.
-func RenderTemplate(w http.ResponseWriter, r *http.Request, tmpl string, templateData *models.TemplateData) {
+func RenderTemplate(w http.ResponseWriter, r *http.Request, tmpl string, templateData *models.TemplateData) error {
 	// Get cache from the app config.
 	// I want to rebuild the cache if useCache is false, for example when I'm developing the app (aka "dev mode")
 	var templateCache map[string]*template.Template
 	if app.UseCache {
-		templateCache = map[string]*template.Template{} // Empty map, same as the make function.
+		templateCache = app.TemplateCache
 	} else {
 		templateCache, _ = CreateTemplateCache()
 	}
@@ -46,7 +50,7 @@ func RenderTemplate(w http.ResponseWriter, r *http.Request, tmpl string, templat
 	// Get template from cache.
 	templ, templateFound := templateCache[tmpl]
 	if !templateFound {
-		log.Fatal("Template not found in cache")
+		return errors.New("cannot get template from cache")
 	}
 
 	// This buffer is arbitrary code to add more error checking below. Not needed.
@@ -56,6 +60,7 @@ func RenderTemplate(w http.ResponseWriter, r *http.Request, tmpl string, templat
 	err := templ.Execute(buf, templateData)
 	if err != nil {
 		fmt.Println("error executing template:", err)
+		return err
 	}
 
 	// Render the template
@@ -63,6 +68,8 @@ func RenderTemplate(w http.ResponseWriter, r *http.Request, tmpl string, templat
 	if err != nil {
 		log.Println(err)
 	}
+
+	return nil
 }
 
 func CreateTemplateCache() (map[string]*template.Template, error) {
@@ -71,7 +78,7 @@ func CreateTemplateCache() (map[string]*template.Template, error) {
 
 	// Get all the files name *.fileName.gohtml from ./templates (FULL PATH from root project)
 	// Ex: templates/home.page.gohtml
-	fileNames, err := filepath.Glob("./templates/*.page.gohtml")
+	fileNames, err := filepath.Glob(fmt.Sprintf("%s/*.page.gohtml", pathToTemplates))
 	if err != nil {
 		return templateCache, err
 	}
@@ -83,20 +90,20 @@ func CreateTemplateCache() (map[string]*template.Template, error) {
 		// Create template from the current fileName being iterated by the loop.
 		// The line below creates a template with the name I want (home.filename.gohtml for example).
 		// And it also populates it with the corresponding file.
-		templateSet, err := template.New(name).ParseFiles(fileName) // Page is the FULL PATH.
+		templateSet, err := template.New(name).Funcs(functions).ParseFiles(fileName) // Page is the FULL PATH.
 		if err != nil {
 			return templateCache, err
 		}
 
 		// Search for layouts, that were not searched in the initial filepath.Glob and need to be applied in
 		// each template (since they are a layout).
-		fileNames, err := filepath.Glob("./templates/*layout.gohtml")
+		fileNames, err := filepath.Glob(fmt.Sprintf("%s/*layout.gohtml", pathToTemplates))
 		if err != nil {
 			return templateCache, err
 		}
 		// If any layout fileNames were found, add the layout to the existing templateSet. So it mixes layout + page.
 		if len(fileNames) > 0 {
-			templateSet, err = templateSet.ParseGlob("./templates/*.layout.gohtml")
+			templateSet, err = templateSet.ParseGlob(fmt.Sprintf("%s/*.layout.gohtml", pathToTemplates))
 			if err != nil {
 				return templateCache, err
 			}
