@@ -4,6 +4,7 @@
 - Uses [chi router](github.com/go-chi/chi/v5) for routing.
 - Uses [Alex E. SCS](github.com/alexedwards/scs/v2) for managing sessions.
 - Uses [noSurf](github.com/justinas/nosurf) to prevent CSRF attacks.
+- Uses [goValidator](https://github.com/asaskevich/govalidator) to sanitize strings.
 
 ## Main Goals
 
