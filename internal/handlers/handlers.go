@@ -5,9 +5,9 @@ import (
 	"fmt"
 	"github.com/nambroa/lodging-bookings/internal/config"
 	"github.com/nambroa/lodging-bookings/internal/forms"
+	"github.com/nambroa/lodging-bookings/internal/helpers"
 	"github.com/nambroa/lodging-bookings/internal/models"
 	"github.com/nambroa/lodging-bookings/internal/render"
-	"log"
 	"net/http"
 )
 
@@ -41,8 +41,7 @@ func (m *Repository) Home(w http.ResponseWriter, r *http.Request) {
 
 // About is the about page handler.
 func (m *Repository) About(w http.ResponseWriter, r *http.Request) {
-	stringMap := map[string]string{"test": "Hello, Again."}
-	render.RenderTemplate(w, r, "about.page.gohtml", &models.TemplateData{StringMap: stringMap})
+	render.RenderTemplate(w, r, "about.page.gohtml", &models.TemplateData{})
 }
 
 // Majors is the Majors Suite page handler. Renders the room page.
@@ -75,7 +74,7 @@ func (m *Repository) Reservation(w http.ResponseWriter, r *http.Request) {
 func (m *Repository) PostReservation(w http.ResponseWriter, r *http.Request) {
 	err := r.ParseForm()
 	if err != nil {
-		log.Println(err)
+		helpers.ServerError(w, err)
 		return
 	}
 
@@ -117,7 +116,7 @@ func (m *Repository) ReservationSummary(w http.ResponseWriter, r *http.Request) 
 
 	// Check if reservation was obtained properly. Otherwise display error to the user.
 	if !ok {
-		log.Println("Cannot get item from session.")
+		m.App.ErrorLog.Println("Can't get reservation from session")
 		// We put an error message to be extracted in render method AddDefaultData to show to the user.
 		m.App.Session.Put(r.Context(), "error", "Can't get reservation from session.")
 		http.Redirect(w, r, "/", http.StatusTemporaryRedirect)
@@ -159,8 +158,10 @@ func (m *Repository) AvailabilityJSON(w http.ResponseWriter, r *http.Request) {
 
 	out, err := json.MarshalIndent(response, "", "     ")
 	if err != nil {
-		log.Println(err)
+		helpers.ServerError(w, err)
+		return
 	}
+
 	w.Header().Set("Content-Type", "application/json")
 	w.Write(out)
 }
