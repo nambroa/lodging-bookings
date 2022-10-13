@@ -26,5 +26,7 @@
 ### DB
 
 - Install Soda if it doesn't get installed via the gomod: https://gobuffalo.io/documentation/database/soda/
+- Create a `database.yml` in the root directory of the project. A `database.yml.example` is included, just fill in your
+postgres user and password.
 - Run `soda create` to create the `lodging-bookings` database.
-- Run `soda migrate` to execute the migrations and populate the database with the appropiate tables.
+- Run `soda migrate` to execute the migrations and populate the database with the appropriate tables.
