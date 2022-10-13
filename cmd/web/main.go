@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/alexedwards/scs/v2"
 	"github.com/nambroa/lodging-bookings/internal/config"
+	"github.com/nambroa/lodging-bookings/internal/driver"
 	"github.com/nambroa/lodging-bookings/internal/handlers"
 	"github.com/nambroa/lodging-bookings/internal/helpers"
 	"github.com/nambroa/lodging-bookings/internal/models"
@@ -23,10 +24,11 @@ var infoLog *log.Logger
 var errorLog *log.Logger
 
 func main() {
-	err := run()
+	db, err := run()
 	if err != nil {
 		log.Fatal(err)
 	}
+	defer db.SQL.Close()
 
 	fmt.Println("Starting application on port", portNumber)
 	// Start a webserver and listen to a specific port.
@@ -39,7 +41,7 @@ func main() {
 	log.Fatal(err)
 }
 
-func run() error {
+func run() (*driver.DB, error) {
 	// Types that will be stored in the session object (encoded in the session object).
 	gob.Register(models.Reservation{})
 
@@ -58,6 +60,13 @@ func run() error {
 	session.Cookie.Secure = app.InProduction
 	app.Session = session
 
+	// Connect to DB.
+	log.Println("Connecting to database..")
+	db, err := driver.ConnectSQL("host=localhost port=5432 dbname=lodging-bookings user=postgres password=123")
+	if err != nil {
+		log.Fatal("Cannot connect to database. Error:", err)
+	}
+
 	templateCache, err := render.CreateTemplateCache()
 	if err != nil {
 		log.Fatal("cannot create template cache")
@@ -70,5 +79,5 @@ func run() error {
 	handlers.NewHandlers(repo)
 	render.NewTemplates(&app)
 	helpers.NewHelpers(&app)
-	return nil
+	return db, nil
 }
