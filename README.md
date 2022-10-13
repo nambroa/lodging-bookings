@@ -5,6 +5,8 @@
 - Uses [Alex E. SCS](github.com/alexedwards/scs/v2) for managing sessions.
 - Uses [noSurf](github.com/justinas/nosurf) to prevent CSRF attacks.
 - Uses [goValidator](https://github.com/asaskevich/govalidator) to sanitize strings.
+- Uses [sodaPop](https://github.com/gobuffalo/pop?utm_source=godoc) for managing DB migrations.
+- Uses [postgreSQL](https://www.postgresql.org/download/) as the DB Engine. (optional but recommended DBeaver)
 
 ## Main Goals
 

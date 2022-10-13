@@ -29,6 +29,7 @@
 *.log
 *.sql
 *.sqlite
+database.yml
 
 # OS generated files #
 ######################
