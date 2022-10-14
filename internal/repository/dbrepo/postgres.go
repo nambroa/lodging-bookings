@@ -57,3 +57,32 @@ func (m *postgresDBRepo) InsertRoomRestriction(r models.RoomRestriction) error {
 	}
 	return nil
 }
+
+// SearchAvailabilityByDates returns true if availability exists for a specific roomID, and false otherwise.
+func (m *postgresDBRepo) SearchAvailabilityByDates(start, end time.Time, roomID int) (bool, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second) // gives the transaction a 3-second timeout.
+	defer cancel()
+
+	var numRows int
+
+	query := `
+		select
+			count(id)
+		from
+		    room_restrictions
+		where
+		    room_id = $1
+		    $2 < end_date and $3 > start_date;`
+
+	row := m.DB.QueryRowContext(ctx, query, roomID, start, end)
+	err := row.Scan(&numRows)
+	if err != nil {
+		return false, err
+	}
+
+	if numRows == 0 { // No matches in select query means date range is available for reservation.
+		return true, nil
+	}
+
+	return false, nil
+}
