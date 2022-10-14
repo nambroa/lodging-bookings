@@ -12,6 +12,8 @@ import (
 	"github.com/nambroa/lodging-bookings/internal/repository"
 	"github.com/nambroa/lodging-bookings/internal/repository/dbrepo"
 	"net/http"
+	"strconv"
+	"time"
 )
 
 // Repository pattern used to share the appConfig and the DB with the handlers.
@@ -81,11 +83,29 @@ func (m *Repository) PostReservation(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	startDateForm := r.Form.Get("start_date")
+	endDateForm := r.Form.Get("end_date")
+	// Declare the layout that matches how the date is extracted from the form
+	layout := "2006-01-02"
+	// Parse it in go-friendly date.
+	// Example form date: 2006-01-02
+	// Parsed date: 2016-01-02 0:00:00 +0000 UTC
+	startDate, err := time.Parse(layout, startDateForm)
+	endDate, err := time.Parse(layout, endDateForm)
+	if err != nil {
+		helpers.ServerError(w, err)
+		return
+	}
+
+	roomID, err := strconv.Atoi(r.Form.Get("room_id")) // Parses string to int.
 	reservation := models.Reservation{
 		FirstName: r.Form.Get("first_name"),
 		LastName:  r.Form.Get("last_name"),
 		Email:     r.Form.Get("email"),
 		Phone:     r.Form.Get("phone"),
+		StartDate: startDate,
+		EndDate:   endDate,
+		RoomID:    roomID,
 	}
 
 	form := forms.New(r.PostForm)
@@ -105,6 +125,23 @@ func (m *Repository) PostReservation(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	newReservationID, err := m.DB.InsertReservation(reservation)
+	if err != nil {
+		helpers.ServerError(w, err)
+		return
+	}
+	restriction := models.RoomRestriction{
+		StartDate:     startDate,
+		EndDate:       endDate,
+		RoomID:        roomID,
+		ReservationID: newReservationID,
+		RestrictionID: 1, // Temporary, RestrictionID 1 = Restriction of type reservation
+	}
+	err = m.DB.InsertRoomRestriction(restriction)
+	if err != nil {
+		helpers.ServerError(w, err)
+		return
+	}
 	// Put the reservation info into the session to show later in the summary.
 	m.App.Session.Put(r.Context(), "reservation", reservation)
 
