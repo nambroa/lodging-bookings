@@ -20,8 +20,8 @@ var app *config.AppConfig
 
 var pathToTemplates = "./templates"
 
-// NewTemplates sets the config for the template package.
-func NewTemplates(aConfig *config.AppConfig) {
+// NewRenderer sets the config for the template package.
+func NewRenderer(aConfig *config.AppConfig) {
 	app = aConfig
 }
 func AddDefaultData(templateData *models.TemplateData, r *http.Request) *models.TemplateData {
@@ -36,8 +36,8 @@ func AddDefaultData(templateData *models.TemplateData, r *http.Request) *models.
 	return templateData
 }
 
-// RenderTemplate renders a specific html template to the writer w with filename ending in tmpl.
-func RenderTemplate(w http.ResponseWriter, r *http.Request, tmpl string, templateData *models.TemplateData) error {
+// Template renders a specific html template to the writer w with filename ending in tmpl.
+func Template(w http.ResponseWriter, r *http.Request, tmpl string, templateData *models.TemplateData) error {
 	// Get cache from the app config.
 	// I want to rebuild the cache if useCache is false, for example when I'm developing the app (aka "dev mode")
 	var templateCache map[string]*template.Template
