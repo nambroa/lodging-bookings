@@ -58,8 +58,8 @@ func (m *postgresDBRepo) InsertRoomRestriction(r models.RoomRestriction) error {
 	return nil
 }
 
-// SearchAvailabilityByDates returns true if availability exists for a specific roomID, and false otherwise.
-func (m *postgresDBRepo) SearchAvailabilityByDates(start, end time.Time, roomID int) (bool, error) {
+// SearchAvailabilityByDatesByRoomID returns true if availability exists for a specific roomID, and false otherwise.
+func (m *postgresDBRepo) SearchAvailabilityByDatesByRoomID(start, end time.Time, roomID int) (bool, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second) // gives the transaction a 3-second timeout.
 	defer cancel()
 
@@ -71,10 +71,10 @@ func (m *postgresDBRepo) SearchAvailabilityByDates(start, end time.Time, roomID 
 		from
 		    room_restrictions
 		where
-		    room_id = $1
-		    $2 < end_date and $3 > start_date;`
+		    room_id = $1 and
+		    $2 > start_date and $3 < end_date;`
 
-	row := m.DB.QueryRowContext(ctx, query, roomID, start, end)
+	row := m.DB.QueryRowContext(ctx, query, roomID, end, start)
 	err := row.Scan(&numRows)
 	if err != nil {
 		return false, err
@@ -85,4 +85,40 @@ func (m *postgresDBRepo) SearchAvailabilityByDates(start, end time.Time, roomID 
 	}
 
 	return false, nil
+}
+
+// SearchAvailabilityForAllRooms returns a slice of available rooms for a given date range.
+func (m *postgresDBRepo) SearchAvailabilityForAllRooms(start, end time.Time) ([]models.Room, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second) // gives the transaction a 3-second timeout.
+	defer cancel()
+
+	var rooms []models.Room
+	query := `select
+				r.id, r.room_name
+			  from
+			      rooms
+			  where
+			      r.id in (select rr.room_id from room_restrictions rr where rr.start_date < $1 and rr.end_date > $2)
+	
+`
+	rows, err := m.DB.QueryContext(ctx, query, end, start)
+	if err != nil {
+		return rooms, err
+	}
+
+	for rows.Next() {
+		var room models.Room
+		err := rows.Scan(
+			&room.ID,
+			&room.RoomName,
+		)
+		if err != nil {
+			return rooms, err
+		}
+		rooms = append(rooms, room)
+	}
+	if err = rows.Err(); err != nil {
+		return rooms, err
+	}
+	return rooms, nil
 }
