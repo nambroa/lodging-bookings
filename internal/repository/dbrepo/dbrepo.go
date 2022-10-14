@@ -6,6 +6,8 @@ import (
 	"github.com/nambroa/lodging-bookings/internal/repository"
 )
 
+// Repository pattern to abstract interactions with the DB.
+
 type postgresDBRepo struct {
 	App *config.AppConfig
 	DB  *sql.DB // connection pool.

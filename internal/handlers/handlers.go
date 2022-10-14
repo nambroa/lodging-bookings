@@ -4,27 +4,30 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/nambroa/lodging-bookings/internal/config"
+	"github.com/nambroa/lodging-bookings/internal/driver"
 	"github.com/nambroa/lodging-bookings/internal/forms"
 	"github.com/nambroa/lodging-bookings/internal/helpers"
 	"github.com/nambroa/lodging-bookings/internal/models"
 	"github.com/nambroa/lodging-bookings/internal/render"
+	"github.com/nambroa/lodging-bookings/internal/repository"
+	"github.com/nambroa/lodging-bookings/internal/repository/dbrepo"
 	"net/http"
 )
 
-// Repository pattern used to share the appConfig with the handlers.
-
-// Repository is the repository type.
+// Repository pattern used to share the appConfig and the DB with the handlers.
 type Repository struct {
 	App *config.AppConfig
+	DB  repository.DatabaseRepo
 }
 
 // Repo is used by the handlers.
 var Repo *Repository
 
 // NewRepo creates a new repository with the content being the app config instance.
-func NewRepo(appConfig *config.AppConfig) *Repository {
+func NewRepo(appConfig *config.AppConfig, db *driver.DB) *Repository {
 	return &Repository{
 		App: appConfig,
+		DB:  dbrepo.NewPostgresRepo(db.SQL, appConfig),
 	}
 }
 
