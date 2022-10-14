@@ -96,9 +96,9 @@ func (m *postgresDBRepo) SearchAvailabilityForAllRooms(start, end time.Time) ([]
 	query := `select
 				r.id, r.room_name
 			  from
-			      rooms
+			      rooms r
 			  where
-			      r.id in (select rr.room_id from room_restrictions rr where rr.start_date < $1 and rr.end_date > $2)
+			      r.id not in (select rr.room_id from room_restrictions rr where rr.start_date < $1 and rr.end_date > $2)
 	
 `
 	rows, err := m.DB.QueryContext(ctx, query, end, start)

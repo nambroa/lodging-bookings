@@ -2,7 +2,8 @@ package handlers
 
 import (
 	"encoding/json"
-	"fmt"
+	"errors"
+	"github.com/go-chi/chi/v5"
 	"github.com/nambroa/lodging-bookings/internal/config"
 	"github.com/nambroa/lodging-bookings/internal/driver"
 	"github.com/nambroa/lodging-bookings/internal/forms"
@@ -12,6 +13,7 @@ import (
 	"github.com/nambroa/lodging-bookings/internal/repository"
 	"github.com/nambroa/lodging-bookings/internal/repository/dbrepo"
 	"net/http"
+	"net/url"
 	"strconv"
 	"time"
 )
@@ -75,6 +77,16 @@ func (m *Repository) Reservation(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
+func parseDateFromForm(form url.Values, dateString string) (time.Time, error) {
+	// Declare the layout that matches how the date is extracted from the form
+	layout := "2006-01-02"
+	// Parse it in go-friendly date.
+	// Example form date: 2006-01-02
+	// Parsed date: 2016-01-02 0:00:00 +0000 UTC
+	parsedDate, err := time.Parse(layout, form.Get(dateString))
+	return parsedDate, err
+}
+
 // PostReservation handles the posting of a reservation form.
 func (m *Repository) PostReservation(w http.ResponseWriter, r *http.Request) {
 	err := r.ParseForm()
@@ -83,15 +95,8 @@ func (m *Repository) PostReservation(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	startDateForm := r.Form.Get("start_date")
-	endDateForm := r.Form.Get("end_date")
-	// Declare the layout that matches how the date is extracted from the form
-	layout := "2006-01-02"
-	// Parse it in go-friendly date.
-	// Example form date: 2006-01-02
-	// Parsed date: 2016-01-02 0:00:00 +0000 UTC
-	startDate, err := time.Parse(layout, startDateForm)
-	endDate, err := time.Parse(layout, endDateForm)
+	startDate, err := parseDateFromForm(r.Form, "start_date")
+	endDate, err := parseDateFromForm(r.Form, "end_date")
 	if err != nil {
 		helpers.ServerError(w, err)
 		return
@@ -178,10 +183,37 @@ func (m *Repository) Availability(w http.ResponseWriter, r *http.Request) {
 // PostAvailability is the search availability form handler.
 // PostAvailability renders the search availability page after the form has been processed.
 func (m *Repository) PostAvailability(w http.ResponseWriter, r *http.Request) {
-	start := r.Form.Get("start") // matches input from form with name attribute start. Default type is string.
-	end := r.Form.Get("end")
-	fmt.Println(start, end)
-	w.Write([]byte("Posted to search availability"))
+	// matches input from form with name attribute start. Default type is string
+	startDate, err := parseDateFromForm(r.Form, "start")
+	endDate, err := parseDateFromForm(r.Form, "end")
+	if err != nil {
+		helpers.ServerError(w, err)
+		return
+	}
+
+	rooms, err := m.DB.SearchAvailabilityForAllRooms(startDate, endDate)
+	if err != nil {
+		helpers.ServerError(w, err)
+		return
+	}
+
+	if len(rooms) == 0 {
+		m.App.Session.Put(r.Context(), "error", "No availability for selected dates. Please select another date.")
+		http.Redirect(w, r, "/search-availability", http.StatusSeeOther)
+		return
+	}
+
+	data := make(map[string]interface{})
+	data["rooms"] = rooms
+
+	// Storing info in the session to pass to the make reservation page later.
+	reservation := models.Reservation{
+		StartDate: startDate,
+		EndDate:   endDate,
+	}
+	m.App.Session.Put(r.Context(), "reservation", reservation)
+
+	render.Template(w, r, "choose-room.page.gohtml", &models.TemplateData{Data: data})
 }
 
 type jsonResponse struct {
@@ -204,4 +236,23 @@ func (m *Repository) AvailabilityJSON(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")
 	w.Write(out)
+}
+
+func (m *Repository) ChooseRoom(w http.ResponseWriter, r *http.Request) {
+	roomID, err := strconv.Atoi(chi.URLParam(r, "id")) // key is the same as the key in routes.go
+	if err != nil {
+		helpers.ServerError(w, err)
+		return
+	}
+	reservation, ok := m.App.Session.Get(r.Context(), "reservation").(models.Reservation)
+	if !ok {
+		helpers.ServerError(w, errors.New("error obtaining reservation from session while choosing a room"))
+		return
+	}
+
+	reservation.RoomID = roomID
+	m.App.Session.Put(r.Context(), "reservation", reservation)
+
+	// Redirect user to make a reservation for the room they chose.
+	http.Redirect(w, r, "/make-reservation", http.StatusSeeOther)
 }
