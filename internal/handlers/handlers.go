@@ -35,6 +35,14 @@ func NewRepo(appConfig *config.AppConfig, db *driver.DB) *Repository {
 	}
 }
 
+// NewTestRepo creates a new repository without a DB connection for the unit tests.
+func NewTestRepo(appConfig *config.AppConfig) *Repository {
+	return &Repository{
+		App: appConfig,
+		DB:  dbrepo.NewTestingRepo(appConfig),
+	}
+}
+
 // NewHandlers sets the Repository for the handlers.
 func NewHandlers(repo *Repository) {
 	Repo = repo
