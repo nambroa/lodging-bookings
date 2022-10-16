@@ -283,14 +283,17 @@ func (m *Repository) BookRoom(w http.ResponseWriter, r *http.Request) {
 
 	var reservation models.Reservation
 	reservation.RoomID = roomId
-	reservation.StartDate, _ = time.Parse(startDate, "2006-01-02")
-	reservation.EndDate, _ = time.Parse(endDate, "2006-01-02")
+	parsedStartDate, _ := time.Parse("2006-01-02", startDate)
+	parsedEndDate, _ := time.Parse("2006-01-02", endDate)
+	reservation.StartDate = parsedStartDate
+	reservation.EndDate = parsedEndDate
 	room, err := m.DB.GetRoomByID(roomId)
 	if err != nil {
 		helpers.ServerError(w, err)
 		return
 	}
 	reservation.Room.RoomName = room.RoomName
+
 	m.App.Session.Put(r.Context(), "reservation", reservation)
 	http.Redirect(w, r, "/make-reservation", http.StatusSeeOther)
 
