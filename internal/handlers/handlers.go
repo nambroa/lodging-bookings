@@ -68,12 +68,28 @@ func (m *Repository) Contact(w http.ResponseWriter, r *http.Request) {
 
 // Reservation is the Make Reservation page handler.
 func (m *Repository) Reservation(w http.ResponseWriter, r *http.Request) {
-	var emptyReservation models.Reservation
-	data := map[string]interface{}{"reservation": emptyReservation} // must be same key as reservation is called in PostReservation.
+	reservation, ok := m.App.Session.Get(r.Context(), "reservation").(models.Reservation)
+	if !ok {
+		helpers.ServerError(w, errors.New("error obtaining reservation from session while choosing a room"))
+		return
+	}
 
+	room, err := m.DB.GetRoomByID(reservation.RoomID)
+	if err != nil {
+		helpers.ServerError(w, err)
+		return
+	}
+	reservation.Room.RoomName = room.RoomName
+
+	startDateFormatted := reservation.StartDate.Format("2006-01-02") // Formats time.Time in that specific layout.
+	endDateFormatted := reservation.EndDate.Format("2006-01-02")     // Formats time.Time in that specific layout.
+
+	data := map[string]interface{}{"reservation": reservation} // must be same key as reservation is called in PostReservation.
+	stringMap := map[string]string{"start_date": startDateFormatted, "end_date": endDateFormatted}
 	render.Template(w, r, "make-reservation.page.gohtml", &models.TemplateData{
-		Form: forms.New(nil),
-		Data: data,
+		Form:      forms.New(nil),
+		Data:      data,
+		StringMap: stringMap,
 	})
 }
 
