@@ -94,16 +94,6 @@ func (m *Repository) Reservation(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
-func parseDateFromForm(form url.Values, dateString string) (time.Time, error) {
-	// Declare the layout that matches how the date is extracted from the form
-	layout := "2006-01-02"
-	// Parse it in go-friendly date.
-	// Example form date: 2006-01-02
-	// Parsed date: 2016-01-02 0:00:00 +0000 UTC
-	parsedDate, err := time.Parse(layout, form.Get(dateString))
-	return parsedDate, err
-}
-
 // PostReservation handles the posting of a reservation form.
 func (m *Repository) PostReservation(w http.ResponseWriter, r *http.Request) {
 	reservation, ok := m.App.Session.Get(r.Context(), "reservation").(models.Reservation)
@@ -162,6 +152,7 @@ func (m *Repository) PostReservation(w http.ResponseWriter, r *http.Request) {
 
 }
 
+// ReservationSummary displays information about the reservation after confirming it.
 func (m *Repository) ReservationSummary(w http.ResponseWriter, r *http.Request) {
 	// Take reservation info from the session.
 	// Last part of the line is type assertion aka casting, since Get method returns interface.
@@ -229,15 +220,28 @@ func (m *Repository) PostAvailability(w http.ResponseWriter, r *http.Request) {
 }
 
 type jsonResponse struct {
-	OK      bool   `json:"ok"` // `json` part means the name of the attribute in json.
-	Message string `json:"message"`
+	OK        bool   `json:"ok"` // `json` part means the name of the attribute in json.
+	Message   string `json:"message"`
+	RoomID    string `json:"room_id"`
+	StartDate string `json:"start_date"`
+	EndDate   string `json:"end_date"`
 }
 
 // AvailabilityJSON is the search availability form handler. It sends back a JSON response.
+// Used for the popup modal to search availability for a specific room.
 func (m *Repository) AvailabilityJSON(w http.ResponseWriter, r *http.Request) {
+
+	startDate, _ := parseDateFromForm(r.Form, "start")
+	endDate, _ := parseDateFromForm(r.Form, "end")
+	roomID, _ := strconv.Atoi(r.Form.Get("room_id"))
+
+	available, _ := m.DB.SearchAvailabilityByDatesByRoomID(startDate, endDate, roomID)
 	response := jsonResponse{
-		OK:      true,
-		Message: "Available!",
+		OK:        available,
+		Message:   "",
+		StartDate: r.Form.Get("start"),
+		EndDate:   r.Form.Get("end"),
+		RoomID:    strconv.Itoa(roomID),
 	}
 
 	out, err := json.MarshalIndent(response, "", "     ")
@@ -250,6 +254,7 @@ func (m *Repository) AvailabilityJSON(w http.ResponseWriter, r *http.Request) {
 	w.Write(out)
 }
 
+// ChooseRoom displays a list of rooms that the user can make a reservation of.
 func (m *Repository) ChooseRoom(w http.ResponseWriter, r *http.Request) {
 	roomID, err := strconv.Atoi(chi.URLParam(r, "id")) // key is the same as the key in routes.go
 	if err != nil {
@@ -267,4 +272,37 @@ func (m *Repository) ChooseRoom(w http.ResponseWriter, r *http.Request) {
 
 	// Redirect user to make a reservation for the room they chose.
 	http.Redirect(w, r, "/make-reservation", http.StatusSeeOther)
+}
+
+// BookRoom takes URL params, builds a reservation in the session and takes the user to the make reservation page.
+func (m *Repository) BookRoom(w http.ResponseWriter, r *http.Request) {
+	// Get room ID, Reservation start and end date from url params.
+	roomId, _ := strconv.Atoi(r.URL.Query().Get("id"))
+	startDate := r.URL.Query().Get("s")
+	endDate := r.URL.Query().Get("e")
+
+	var reservation models.Reservation
+	reservation.RoomID = roomId
+	reservation.StartDate, _ = time.Parse(startDate, "2006-01-02")
+	reservation.EndDate, _ = time.Parse(endDate, "2006-01-02")
+	room, err := m.DB.GetRoomByID(roomId)
+	if err != nil {
+		helpers.ServerError(w, err)
+		return
+	}
+	reservation.Room.RoomName = room.RoomName
+	m.App.Session.Put(r.Context(), "reservation", reservation)
+	http.Redirect(w, r, "/make-reservation", http.StatusSeeOther)
+
+}
+
+// parseDateFromForm converts a date extracted from an html form to a Go friendly format (usually used to query).
+func parseDateFromForm(form url.Values, dateString string) (time.Time, error) {
+	// Declare the layout that matches how the date is extracted from the form
+	layout := "2006-01-02"
+	// Parse it in go-friendly date.
+	// Example form date: 2006-01-02
+	// Parsed date: 2016-01-02 0:00:00 +0000 UTC
+	parsedDate, err := time.Parse(layout, form.Get(dateString))
+	return parsedDate, err
 }

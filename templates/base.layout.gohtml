@@ -207,11 +207,15 @@
                 const {
                     msg = "",
                     title = "",
+                    icon = "",
+                    showConfirmButton = true,
                 } = c
 
                 const {value: result} = await Swal.fire({
                     title: title,
                     html: msg,
+                    icon: icon,
+                    showConfirmButton: showConfirmButton,
                     backdrop: false,
                     showCancelButton: true,
                     focusConfirm: false,
