@@ -28,8 +28,12 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
+	// DB connection and mail channel cannot be closed in run() function since that function only runs once at the
+	// beginning of the app. This means that the email channel would be created and immediately closed afterwards,
+	// instead of being alive for the duration of the application.
 	defer db.SQL.Close()
-
+	defer close(app.Mailchan)
+	listenForMail()
 	fmt.Println("Starting application on port", portNumber)
 	// Start a webserver and listen to a specific port.
 	serve := &http.Server{
@@ -48,6 +52,10 @@ func run() (*driver.DB, error) {
 	gob.Register(models.Room{})
 	gob.Register(models.RoomRestriction{})
 
+	// Create channel to send emails.
+	log.Printf("Start email listener..")
+	mailChan := make(chan models.MailData)
+	app.Mailchan = mailChan
 	// Change this to true when in production.
 	app.InProduction = false
 
