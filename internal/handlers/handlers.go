@@ -245,6 +245,15 @@ type jsonResponse struct {
 // Used for the popup modal to search availability for a specific room.
 func (m *Repository) AvailabilityJSON(w http.ResponseWriter, r *http.Request) {
 
+	err := r.ParseForm() // Not needed for functionality, but needed for tests and its good practice.
+	if err != nil {
+		resp := jsonResponse{OK: false, Message: "Internal server error"}
+		out, _ := json.MarshalIndent(resp, "", "    ")
+		w.Header().Set("Content-Type", "application/json")
+		w.Write(out)
+		return
+	}
+
 	startDate, _ := parseDateFromForm(r.Form, "start")
 	endDate, _ := parseDateFromForm(r.Form, "end")
 	roomID, _ := strconv.Atoi(r.Form.Get("room_id"))
@@ -260,7 +269,10 @@ func (m *Repository) AvailabilityJSON(w http.ResponseWriter, r *http.Request) {
 
 	out, err := json.MarshalIndent(response, "", "     ")
 	if err != nil {
-		helpers.ServerError(w, err)
+		resp := jsonResponse{OK: false, Message: "Internal server error"}
+		out, _ := json.MarshalIndent(resp, "", "    ")
+		w.Header().Set("Content-Type", "application/json")
+		w.Write(out)
 		return
 	}
 
