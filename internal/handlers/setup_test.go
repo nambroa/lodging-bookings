@@ -14,15 +14,16 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"testing"
 	"time"
 )
 
 var app config.AppConfig
 var session *scs.SessionManager
 var functions = template.FuncMap{}
-var pathToTemplates = "../../templates"
+var pathToTemplates = "../../templates" // Changed from base definition since tests are executed in a different package.
 
-func getRoutes() http.Handler {
+func TestMain(m *testing.M) {
 	// Types that will be stored in the session object (encoded in the session object).
 	gob.Register(models.Reservation{})
 
@@ -52,6 +53,11 @@ func getRoutes() http.Handler {
 	NewHandlers(repo)
 
 	render.NewRenderer(&app)
+
+	os.Exit(m.Run())
+}
+
+func getRoutes() http.Handler {
 
 	mux := chi.NewRouter()
 

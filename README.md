@@ -30,4 +30,3 @@
 postgres user and password.
 - Run `soda create` to create the `lodging-bookings` database.
 - Run `soda migrate` to execute the migrations and populate the database with the appropriate tables.
-- (TEMP) Create General's Quarters room in the Room table and Restriction of name Reservation with ID 1 in Restriction table.
