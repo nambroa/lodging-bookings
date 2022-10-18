@@ -8,6 +8,7 @@ import (
 	"log"
 	"net/http"
 	"net/http/httptest"
+	"net/url"
 	"strings"
 	"testing"
 	"time"
@@ -116,12 +117,14 @@ func TestRepository_PostReservation_ValidReservation(t *testing.T) {
 		StartDate: time.Now(),
 		EndDate:   time.Now(),
 	}
-	reqBody := "first_name=John"
-	reqBody = fmt.Sprintf("%s&%s", reqBody, "last_name=Smith")
-	reqBody = fmt.Sprintf("%s&%s", reqBody, "email=john@smith.com")
-	reqBody = fmt.Sprintf("%s&%s", reqBody, "phone=123456789")
 
-	req, _ := http.NewRequest("POST", "/make-reservation", strings.NewReader(reqBody))
+	postedData := url.Values{}
+	postedData.Add("first_name", "John")
+	postedData.Add("last_name", "Smith")
+	postedData.Add("email", "john@smith.com")
+	postedData.Add("phone", "123456789")
+
+	req, _ := http.NewRequest("POST", "/make-reservation", strings.NewReader(postedData.Encode()))
 	ctx := getCtx(req)
 	session.Put(ctx, "reservation", reservation)
 	req = req.WithContext(ctx)
@@ -138,12 +141,13 @@ func TestRepository_PostReservation_ValidReservation(t *testing.T) {
 }
 
 func TestRepository_PostReservation_WithNoReservationInSession(t *testing.T) {
-	reqBody := "first_name=John"
-	reqBody = fmt.Sprintf("%s&%s", reqBody, "last_name=Smith")
-	reqBody = fmt.Sprintf("%s&%s", reqBody, "email=john@smith.com")
-	reqBody = fmt.Sprintf("%s&%s", reqBody, "phone=123456789")
+	postedData := url.Values{}
+	postedData.Add("first_name", "John")
+	postedData.Add("last_name", "Smith")
+	postedData.Add("email", "john@smith.com")
+	postedData.Add("phone", "123456789")
 
-	req, _ := http.NewRequest("POST", "/make-reservation", strings.NewReader(reqBody))
+	req, _ := http.NewRequest("POST", "/make-reservation", strings.NewReader(postedData.Encode()))
 	ctx := getCtx(req)
 	req = req.WithContext(ctx)
 
@@ -185,12 +189,13 @@ func TestRepository_PostReservation_WithInvalidRoomID(t *testing.T) {
 		EndDate:   time.Now(),
 	}
 
-	reqBody := "first_name=John"
-	reqBody = fmt.Sprintf("%s&%s", reqBody, "last_name=Smith")
-	reqBody = fmt.Sprintf("%s&%s", reqBody, "email=john@smith.com")
-	reqBody = fmt.Sprintf("%s&%s", reqBody, "phone=123456789")
+	postedData := url.Values{}
+	postedData.Add("first_name", "John")
+	postedData.Add("last_name", "Smith")
+	postedData.Add("email", "john@smith.com")
+	postedData.Add("phone", "123456789")
 
-	req, _ := http.NewRequest("POST", "/make-reservation", strings.NewReader(reqBody))
+	req, _ := http.NewRequest("POST", "/make-reservation", strings.NewReader(postedData.Encode()))
 	ctx := getCtx(req)
 	session.Put(ctx, "reservation", reservation)
 	req = req.WithContext(ctx)
@@ -210,6 +215,7 @@ func TestRepository_AvailabilityJSON_InvalidRoom(t *testing.T) {
 	reqBody := "start=2050-01-01"
 	reqBody = fmt.Sprintf("%s&%s", reqBody, "end=2050-01-02")
 	reqBody = fmt.Sprintf("%s&%s", reqBody, "room_id=1") // Room does not exist
+
 	req, _ := http.NewRequest("POST", "/search-availability-json", strings.NewReader(reqBody))
 
 	ctx := getCtx(req)
