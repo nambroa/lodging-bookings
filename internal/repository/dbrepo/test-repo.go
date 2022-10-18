@@ -12,6 +12,11 @@ func (m *testDBRepo) InsertReservation(res models.Reservation) (int, error) {
 
 // InsertRoomRestriction inserts a room restriction into the database.
 func (m *testDBRepo) InsertRoomRestriction(r models.RoomRestriction) error {
+
+	if r.RoomID > 2 {
+		return errors.New("non-existent room restriction test case")
+	}
+
 	return nil
 }
 
