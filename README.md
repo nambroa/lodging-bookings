@@ -7,6 +7,8 @@
 - Uses [goValidator](https://github.com/asaskevich/govalidator) to sanitize strings.
 - Uses [sodaPop](https://github.com/gobuffalo/pop?utm_source=godoc) for managing DB migrations.
 - Uses [postgreSQL](https://www.postgresql.org/download/) as the DB Engine. (optional but recommended DBeaver)
+- Uses [go-simple-mail](https://github.com/xhit/go-simple-mail) to send email confirmation to the customer and owner of
+the cabin complex.
 
 ## Main Goals
 
