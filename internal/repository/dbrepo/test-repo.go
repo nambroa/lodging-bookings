@@ -1,6 +1,7 @@
 package dbrepo
 
 import (
+	"errors"
 	"github.com/nambroa/lodging-bookings/internal/models"
 	"time"
 )
@@ -28,8 +29,11 @@ func (m *testDBRepo) SearchAvailabilityForAllRooms(start, end time.Time) ([]mode
 
 // GetRoomByID gets a room matching the id given as parameter.
 func (m *testDBRepo) GetRoomByID(id int) (models.Room, error) {
-
 	var room models.Room
+
+	if id > 2 {
+		return room, errors.New("non-existent room test case")
+	}
 
 	return room, nil
 }
