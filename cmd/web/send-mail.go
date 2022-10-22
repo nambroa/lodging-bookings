@@ -4,6 +4,7 @@ import (
 	"github.com/nambroa/lodging-bookings/internal/models"
 	mail "github.com/xhit/go-simple-mail/v2"
 	"log"
+	"runtime/debug"
 	"time"
 )
 
@@ -28,7 +29,10 @@ func sendMsg(m models.MailData) {
 
 	client, err := server.Connect()
 	if err != nil {
-		errorLog.Println(err)
+		log.Println("Error connecting to mailserver!")
+		log.Println(err)
+		debug.PrintStack()
+		//errorLog.Println(err)
 	}
 
 	// Build email message.
@@ -38,7 +42,10 @@ func sendMsg(m models.MailData) {
 
 	err = email.Send(client)
 	if err != nil {
-		errorLog.Println(err)
+		log.Println("Error sending mail!")
+		log.Println(err)
+		debug.PrintStack()
+		//errorLog.Println(err)
 	} else {
 		log.Printf("Mail sent successfully from %s to %s", m.From, m.To)
 	}

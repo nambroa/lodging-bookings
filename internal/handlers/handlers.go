@@ -3,6 +3,7 @@ package handlers
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"github.com/go-chi/chi/v5"
 	"github.com/nambroa/lodging-bookings/internal/config"
 	"github.com/nambroa/lodging-bookings/internal/driver"
@@ -106,12 +107,14 @@ func (m *Repository) Reservation(w http.ResponseWriter, r *http.Request) {
 
 // PostReservation handles the posting of a reservation form.
 func (m *Repository) PostReservation(w http.ResponseWriter, r *http.Request) {
+	// Get reservation from session context
 	reservation, ok := m.App.Session.Get(r.Context(), "reservation").(models.Reservation)
 	if !ok {
 		m.App.Session.Put(r.Context(), "error", "can't get reservation from session for PostReservation")
 		http.Redirect(w, r, "/", http.StatusTemporaryRedirect)
 		return
 	}
+
 	err := r.ParseForm()
 	if err != nil {
 		m.App.Session.Put(r.Context(), "error", "can't parse form for PostReservation")
@@ -160,6 +163,36 @@ func (m *Repository) PostReservation(w http.ResponseWriter, r *http.Request) {
 		http.Redirect(w, r, "/", http.StatusTemporaryRedirect)
 		return
 	}
+	// Send email notification to the guest.
+	htmlMessage := fmt.Sprintf(`
+		<strong> Reservation Confirmation </strong><br>
+		Dear %s: <br>
+		Your reservation for the %s from the %s to the %s is now confirmed.
+`, reservation.FirstName, reservation.Room.RoomName, reservation.StartDate.Format("2006-01-02"), reservation.EndDate.Format("2006-01-02"))
+
+	msg := models.MailData{
+		To:      reservation.Email,
+		From:    "me@here.com",
+		Subject: "Reservation Confirmation",
+		Content: htmlMessage,
+	}
+	m.App.Mailchan <- msg
+
+	// Send email notification to the owner.
+	htmlMessage = fmt.Sprintf(`
+		<strong> Reservation Confirmation </strong><br>
+		Dear %s: <br>
+		A reservation has been made for your property %s from the %s to the %s.
+`, reservation.FirstName, reservation.Room.RoomName, reservation.StartDate.Format("2006-01-02"), reservation.EndDate.Format("2006-01-02"))
+
+	msg = models.MailData{
+		To:      "owner-email@here.com",
+		From:    "me@here.com",
+		Subject: "Reservation Confirmation",
+		Content: htmlMessage,
+	}
+	m.App.Mailchan <- msg
+
 	// Put the reservation info into the session to show later in the summary.
 	m.App.Session.Put(r.Context(), "reservation", reservation)
 
