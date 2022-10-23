@@ -358,6 +358,10 @@ func (m *Repository) BookRoom(w http.ResponseWriter, r *http.Request) {
 
 }
 
+func (m *Repository) ShowLogin(writer http.ResponseWriter, request *http.Request) {
+	render.Template(writer, request, "login.page.gohtml", &models.TemplateData{Form: forms.New(nil)})
+}
+
 // parseDateFromForm converts a date extracted from an html form to a Go friendly format (usually used to query).
 func parseDateFromForm(form url.Values, dateString string) (time.Time, error) {
 	// Declare the layout that matches how the date is extracted from the form
