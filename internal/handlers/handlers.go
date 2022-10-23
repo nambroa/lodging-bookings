@@ -371,12 +371,18 @@ func (m *Repository) PostShowLogin(writer http.ResponseWriter, request *http.Req
 	err := request.ParseForm()
 	if err != nil {
 		log.Println("Cannot parse postshowlogin form:", err)
+		m.App.Session.Put(request.Context(), "error", "Cannot parse user information")
+		http.Redirect(writer, request, "/user/login", http.StatusSeeOther)
+		return
 	}
 
 	form := forms.New(request.PostForm)
-	form.Required("email, password")
+	form.Required("email", "password")
+	form.IsEmail("email")
 	if !form.Valid() {
-		log.Println("Postshowlogin form is not valid:", err)
+		log.Println("Postshowlogin form is not valid:", form.Errors)
+		render.Template(writer, request, "login.page.gohtml", &models.TemplateData{Form: form})
+		return
 	}
 
 	id, _, err := m.DB.Authenticate(request.Form.Get("email"), request.Form.Get("password"))

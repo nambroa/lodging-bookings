@@ -2,6 +2,7 @@ package main
 
 import (
 	"github.com/justinas/nosurf"
+	"github.com/nambroa/lodging-bookings/internal/helpers"
 	"net/http"
 )
 
@@ -22,4 +23,17 @@ func NoSurf(next http.Handler) http.Handler {
 // SessionLoad loads and saves the session on every request.
 func SessionLoad(next http.Handler) http.Handler {
 	return session.LoadAndSave(next)
+}
+
+// Auth Middleware applied to routes in order to protect them (requiring authentication).
+func Auth(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if !helpers.IsAuthenticated(r) {
+			session.Put(r.Context(), "error", "Please log in first.")
+			http.Redirect(w, r, "/user/login", http.StatusSeeOther)
+			return
+		}
+		// If no error is encountered, just pass on to the next middleware in the execution line.
+		next.ServeHTTP(w, r)
+	})
 }
