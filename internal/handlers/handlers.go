@@ -399,6 +399,20 @@ func (m *Repository) PostShowLogin(writer http.ResponseWriter, request *http.Req
 
 }
 
+// Logout logs the user out.
+func (m *Repository) Logout(writer http.ResponseWriter, request *http.Request) {
+	// Destroy the user session.
+	_ = m.App.Session.Destroy(request.Context())
+	// Prevents session fixation attack.
+	_ = m.App.Session.RenewToken(request.Context())
+	m.App.Session.Put(request.Context(), "flash", "Logged out successfully")
+	http.Redirect(writer, request, "/", http.StatusSeeOther)
+}
+
+func (m *Repository) AdminDashboard(writer http.ResponseWriter, request *http.Request) {
+	render.Template(writer, request, "admin-dashboard.page.gohtml", &models.TemplateData{})
+}
+
 // parseDateFromForm converts a date extracted from an html form to a Go friendly format (usually used to query).
 func parseDateFromForm(form url.Values, dateString string) (time.Time, error) {
 	// Declare the layout that matches how the date is extracted from the form

@@ -32,7 +32,9 @@ func AddDefaultData(templateData *models.TemplateData, r *http.Request) *models.
 	templateData.Flash = app.Session.PopString(r.Context(), "flash")
 	templateData.Error = app.Session.PopString(r.Context(), "error")
 	templateData.Warning = app.Session.PopString(r.Context(), "warning")
-
+	if app.Session.Exists(r.Context(), "user_id") {
+		templateData.IsAuthenticated = 1
+	}
 	return templateData
 }
 
