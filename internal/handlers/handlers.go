@@ -13,6 +13,7 @@ import (
 	"github.com/nambroa/lodging-bookings/internal/render"
 	"github.com/nambroa/lodging-bookings/internal/repository"
 	"github.com/nambroa/lodging-bookings/internal/repository/dbrepo"
+	"log"
 	"net/http"
 	"net/url"
 	"strconv"
@@ -360,6 +361,36 @@ func (m *Repository) BookRoom(w http.ResponseWriter, r *http.Request) {
 
 func (m *Repository) ShowLogin(writer http.ResponseWriter, request *http.Request) {
 	render.Template(writer, request, "login.page.gohtml", &models.TemplateData{Form: forms.New(nil)})
+}
+
+// PostShowLogin handles the user logging in.
+func (m *Repository) PostShowLogin(writer http.ResponseWriter, request *http.Request) {
+	// Prevents session fixation attack.
+	_ = m.App.Session.RenewToken(request.Context())
+
+	err := request.ParseForm()
+	if err != nil {
+		log.Println("Cannot parse postshowlogin form:", err)
+	}
+
+	form := forms.New(request.PostForm)
+	form.Required("email, password")
+	if !form.Valid() {
+		log.Println("Postshowlogin form is not valid:", err)
+	}
+
+	id, _, err := m.DB.Authenticate(request.Form.Get("email"), request.Form.Get("password"))
+	if err != nil {
+		log.Println("Cannot authenticate user in postshowlogin:", err)
+		m.App.Session.Put(request.Context(), "error", "Invalid login credentials")
+		http.Redirect(writer, request, "/user/login", http.StatusSeeOther)
+		return
+	}
+
+	m.App.Session.Put(request.Context(), "user_id", id)
+	m.App.Session.Put(request.Context(), "flash", "Logged in successfully")
+	http.Redirect(writer, request, "/", http.StatusSeeOther)
+
 }
 
 // parseDateFromForm converts a date extracted from an html form to a Go friendly format (usually used to query).
