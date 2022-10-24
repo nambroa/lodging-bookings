@@ -413,6 +413,20 @@ func (m *Repository) AdminDashboard(writer http.ResponseWriter, request *http.Re
 	render.Template(writer, request, "admin-dashboard.page.gohtml", &models.TemplateData{})
 }
 
+func (m *Repository) AdminNewReservations(writer http.ResponseWriter, request *http.Request) {
+	render.Template(writer, request, "admin-new-reservations.page.gohtml", &models.TemplateData{})
+
+}
+
+func (m *Repository) AdminAllReservations(writer http.ResponseWriter, request *http.Request) {
+	render.Template(writer, request, "admin-all-reservations.page.gohtml", &models.TemplateData{})
+
+}
+
+func (m *Repository) AdminReservationsCalendar(writer http.ResponseWriter, request *http.Request) {
+	render.Template(writer, request, "admin-reservations-calendar.page.gohtml", &models.TemplateData{})
+}
+
 // parseDateFromForm converts a date extracted from an html form to a Go friendly format (usually used to query).
 func parseDateFromForm(form url.Values, dateString string) (time.Time, error) {
 	// Declare the layout that matches how the date is extracted from the form
