@@ -413,11 +413,19 @@ func (m *Repository) AdminDashboard(writer http.ResponseWriter, request *http.Re
 	render.Template(writer, request, "admin-dashboard.page.gohtml", &models.TemplateData{})
 }
 
+// AdminNewReservations shows all the new reservations in the admin layout.
 func (m *Repository) AdminNewReservations(writer http.ResponseWriter, request *http.Request) {
-	render.Template(writer, request, "admin-new-reservations.page.gohtml", &models.TemplateData{})
+	reservations, err := m.DB.GetNewReservations()
+	if err != nil {
+		helpers.ServerError(writer, err)
+		return
+	}
+	data := map[string]interface{}{"reservations": reservations}
 
+	render.Template(writer, request, "admin-new-reservations.page.gohtml", &models.TemplateData{Data: data})
 }
 
+// AdminAllReservations shows all the reservations in the admin layout.
 func (m *Repository) AdminAllReservations(writer http.ResponseWriter, request *http.Request) {
 	reservations, err := m.DB.GetAllReservations()
 	if err != nil {
@@ -426,7 +434,6 @@ func (m *Repository) AdminAllReservations(writer http.ResponseWriter, request *h
 	}
 	data := map[string]interface{}{"reservations": reservations}
 	render.Template(writer, request, "admin-all-reservations.page.gohtml", &models.TemplateData{Data: data})
-
 }
 
 func (m *Repository) AdminReservationsCalendar(writer http.ResponseWriter, request *http.Request) {
