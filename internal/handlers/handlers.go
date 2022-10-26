@@ -419,12 +419,18 @@ func (m *Repository) AdminNewReservations(writer http.ResponseWriter, request *h
 }
 
 func (m *Repository) AdminAllReservations(writer http.ResponseWriter, request *http.Request) {
-	render.Template(writer, request, "admin-all-reservations.page.gohtml", &models.TemplateData{})
+	reservations, err := m.DB.GetAllReservations()
+	if err != nil {
+		helpers.ServerError(writer, err)
+		return
+	}
+	data := map[string]interface{}{"reservations": reservations}
+	render.Template(writer, request, "admin-all-reservations.page.gohtml", &models.TemplateData{Data: data})
 
 }
 
 func (m *Repository) AdminReservationsCalendar(writer http.ResponseWriter, request *http.Request) {
-	render.Template(writer, request, "admin-reservations-calendar.page.gohtml", &models.TemplateData{})
+	render.Template(writer, request, "admin-reseñrvations-calendar.page.gohtml", &models.TemplateData{})
 }
 
 // parseDateFromForm converts a date extracted from an html form to a Go friendly format (usually used to query).

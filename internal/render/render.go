@@ -12,9 +12,11 @@ import (
 	"log"
 	"net/http"
 	"path/filepath"
+	"time"
 )
 
-var functions = template.FuncMap{}
+// Specify functions that are available to the golang templates.
+var functions = template.FuncMap{"humanDate": HumanDate}
 
 var app *config.AppConfig
 
@@ -23,6 +25,11 @@ var pathToTemplates = "./templates"
 // NewRenderer sets the config for the template package.
 func NewRenderer(aConfig *config.AppConfig) {
 	app = aConfig
+}
+
+// HumanDate returns time in YYYY-MM-DD format.
+func HumanDate(t time.Time) string {
+	return t.Format("2006-01-02")
 }
 func AddDefaultData(templateData *models.TemplateData, r *http.Request) *models.TemplateData {
 	templateData.CSRFToken = nosurf.Token(r)
