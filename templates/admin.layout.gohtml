@@ -17,6 +17,8 @@
         <link rel="stylesheet" href="/static/admin/css/style.css">
         <!-- endinject -->
         <link rel="shortcut icon" href="/static/admin/images/favicon.png"/>
+        <!-- Notie -->
+        <link rel="stylesheet" type="text/css" href="https://unpkg.com/notie/dist/notie.min.css">
 
         <!--Change background to white for the datatable used in admin layout for all reservations.
         Allows for a stripped table look -->
@@ -143,10 +145,48 @@
     <script src="/static/admin/js/template.js"></script>
     <script src="/static/admin/js/todolist.js"></script>
     <!-- endinject -->
+    <!-- Notie -->
+    <script src="https://unpkg.com/notie"></script>
+    <!-- SweetAlert -->
+    <script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="/static/js/app.js"></script>
+
     <!-- Custom js for this page-->
     <script src="/static/admin/js/dashboard.js"></script>
     <!-- End custom js for this page-->
 
+    <script>
+        let attention = Prompt();
+
+        function notify(message, alertType) {
+            notie.alert({
+                type: alertType,
+                text: message,
+            })
+        }
+
+        function notifyModal(title, text, icon, confirmationButtonText) {
+            Swal.fire({
+                title: title,
+                text: text,
+                icon: icon,
+                confirmButtonText: confirmationButtonText
+            })
+        }
+
+        // Error is the name of the variable in TemplateData.
+        {{with .Error}}
+        notify("{{.}}", "error")
+        {{end}}
+
+        {{with .Flash}}
+        notify("{{.}}", "success")
+        {{end}}
+
+        {{with .Warning}}
+        notify("{{.}}", "warning")
+        {{end}}
+    </script>
     {{block "js" . }}
 
     {{end}}
