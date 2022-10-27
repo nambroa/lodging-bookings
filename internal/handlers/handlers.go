@@ -465,6 +465,42 @@ func (m *Repository) AdminShowReservation(writer http.ResponseWriter, request *h
 	})
 }
 
+func (m *Repository) AdminPostShowReservation(writer http.ResponseWriter, request *http.Request) {
+	err := request.ParseForm()
+	if err != nil {
+		helpers.ServerError(writer, err)
+		return
+	}
+	// User can come from the all reservations or new reservations list.
+	exploded := strings.Split(request.RequestURI, "/")
+	id, err := strconv.Atoi(exploded[4]) // actual URL is for ex. localhost:8080/admin/reservations/all/{ID}
+	if err != nil {
+		helpers.ServerError(writer, err)
+		return
+	}
+	src := exploded[3] // could be "all" or "new".
+
+	res, err := m.DB.GetReservationByID(id)
+	if err != nil {
+		helpers.ServerError(writer, err)
+		return
+	}
+
+	res.FirstName = request.Form.Get("first_name")
+	res.LastName = request.Form.Get("last_name")
+	res.Email = request.Form.Get("email")
+	res.Phone = request.Form.Get("phone")
+
+	err = m.DB.UpdateReservation(res)
+	if err != nil {
+		helpers.ServerError(writer, err)
+		return
+	}
+	m.App.Session.Put(request.Context(), "flash", "Reservation Saved")
+	http.Redirect(writer, request, fmt.Sprintf("/admin/reservations-%s", src), http.StatusSeeOther)
+
+}
+
 // parseDateFromForm converts a date extracted from an html form to a Go friendly format (usually used to query).
 func parseDateFromForm(form url.Values, dateString string) (time.Time, error) {
 	// Declare the layout that matches how the date is extracted from the form
