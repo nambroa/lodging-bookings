@@ -56,3 +56,10 @@ func (m *testDBRepo) GetNewReservations() ([]models.Reservation, error) {
 
 	return reservations, nil
 }
+
+func (m *testDBRepo) GetReservationByID(id int) (models.Reservation, error) {
+	var reservations models.Reservation
+
+	return reservations, nil
+
+}

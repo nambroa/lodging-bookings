@@ -17,6 +17,7 @@ import (
 	"net/http"
 	"net/url"
 	"strconv"
+	"strings"
 	"time"
 )
 
@@ -436,8 +437,32 @@ func (m *Repository) AdminAllReservations(writer http.ResponseWriter, request *h
 	render.Template(writer, request, "admin-all-reservations.page.gohtml", &models.TemplateData{Data: data})
 }
 
+// AdminReservationsCalendar displays the reservation calendar in the admin layout.
 func (m *Repository) AdminReservationsCalendar(writer http.ResponseWriter, request *http.Request) {
-	render.Template(writer, request, "admin-reseñrvations-calendar.page.gohtml", &models.TemplateData{})
+	render.Template(writer, request, "admin-reservations-calendar.page.gohtml", &models.TemplateData{})
+}
+
+// AdminShowReservation shows the content of a single reservation in the admin layout.
+func (m *Repository) AdminShowReservation(writer http.ResponseWriter, request *http.Request) {
+	// User can come from the all reservations or new reservations list.
+	exploded := strings.Split(request.RequestURI, "/")
+	id, err := strconv.Atoi(exploded[4]) // actual URL is for ex. localhost:8080/admin/reservations/all/{ID}
+	if err != nil {
+		helpers.ServerError(writer, err)
+		return
+	}
+	src := exploded[3] // could be "all" or "new".
+	stringMap := map[string]string{"src": src}
+
+	// Get reservation from the DB.
+	res, err := m.DB.GetReservationByID(id)
+	if err != nil {
+		helpers.ServerError(writer, err)
+		return
+	}
+	render.Template(writer, request, "admin-reservations-show.page.gohtml", &models.TemplateData{
+		Data: map[string]interface{}{"reservation": res}, StringMap: stringMap, Form: forms.New(nil),
+	})
 }
 
 // parseDateFromForm converts a date extracted from an html form to a Go friendly format (usually used to query).
