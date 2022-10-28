@@ -33,3 +33,11 @@ the cabin complex.
 postgres user and password.
 - Run `soda create` to create the `lodging-bookings` database.
 - Run `soda migrate` to execute the migrations and populate the database with the appropriate tables.
+
+
+### MailServer
+
+- To enable mail notifications, download and install MailHog here: https://github.com/mailhog/MailHog
+- Run the mailserver before attempting to make a reservation.
+- Note: MailHog is not required for the app to function. You can still make reservations, it will just not send the email
+notification.

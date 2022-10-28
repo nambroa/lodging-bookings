@@ -513,6 +513,18 @@ func (m *Repository) AdminProcessReservation(writer http.ResponseWriter, request
 
 }
 
+// AdminDeleteReservation deletes a reservation.
+func (m *Repository) AdminDeleteReservation(writer http.ResponseWriter, request *http.Request) {
+	id, _ := strconv.Atoi(chi.URLParam(request, "id"))
+	src := chi.URLParam(request, "src")
+
+	_ = m.DB.DeleteReservation(id)
+	m.App.Session.Put(request.Context(), "flash", "Reservation deleted")
+
+	http.Redirect(writer, request, fmt.Sprintf("/admin/reservations-%s", src), http.StatusSeeOther)
+
+}
+
 // parseDateFromForm converts a date extracted from an html form to a Go friendly format (usually used to query).
 func parseDateFromForm(form url.Values, dateString string) (time.Time, error) {
 	// Declare the layout that matches how the date is extracted from the form

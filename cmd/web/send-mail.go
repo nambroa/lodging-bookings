@@ -45,7 +45,6 @@ func sendMsg(m models.MailData) {
 		log.Println("Error sending mail!")
 		log.Println(err)
 		debug.PrintStack()
-		//errorLog.Println(err)
 	} else {
 		log.Printf("Mail sent successfully from %s to %s", m.From, m.To)
 	}

@@ -62,9 +62,17 @@
             </div>
 
             <hr>
-            <input type="submit" class="btn btn-primary" value="Save Reservation">
-            <a href="/admin/reservations-{{$src}}" class="btn btn-warning">Cancel</a>
-            <a href="#!" class="btn btn-info" onclick="processRes({{$res.ID}})">Mark as Processed</a>
+            <div class="float-start">
+                <input type="submit" class="btn btn-primary" value="Save Reservation">
+                <a href="/admin/reservations-{{$src}}" class="btn btn-warning">Cancel</a>
+                <a href="#!" class="btn btn-info" onclick="processRes({{$res.ID}})">Mark as Processed</a>
+
+            </div>
+            <div class="float-end">
+                <a href="#!" class="btn btn-danger" onclick="deleteRes({{$res.ID}})">Delete</a>
+            </div>
+            <!-- Bootstrap requires an empty div with clearfix after float-left and right divs to render properly.-->
+            <div class="clearfix"></div>
 
         </form>
 
@@ -75,13 +83,26 @@
     {{$src := index .StringMap "src"}}
 
     <script>
-        function processRes(id){
+        function processRes(id) {
             attention.custom({
                 icon: 'warning',
                 msg: 'Mark reservation as processed?',
-                callback: function(result){
+                callback: function (result) {
                     // If user clicked on OK to process reservation
-                    if(result !== false) {
+                    if (result !== false) {
+                        window.location.href = "/admin/delete-reservation/{{$src}}/" + id;
+                    }
+                }
+            })
+        }
+
+        function deleteRes(id) {
+            attention.custom({
+                icon: 'danger',
+                msg: 'Delete reservation?',
+                callback: function (result) {
+                    // If user clicked on OK to process reservation
+                    if (result !== false) {
                         window.location.href = "/admin/process-reservation/{{$src}}/" + id;
                     }
                 }
