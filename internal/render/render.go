@@ -16,7 +16,7 @@ import (
 )
 
 // Specify functions that are available to the golang templates.
-var functions = template.FuncMap{"humanDate": HumanDate}
+var functions = template.FuncMap{"humanDate": HumanDate, "formatDate": FormatDate, "iterate": Iterate, "add": Add}
 
 var app *config.AppConfig
 
@@ -31,6 +31,26 @@ func NewRenderer(aConfig *config.AppConfig) {
 func HumanDate(t time.Time) string {
 	return t.Format("2006-01-02")
 }
+
+func FormatDate(t time.Time, format string) string {
+	return t.Format(format)
+}
+
+// Iterate returns a slice of ints, starting at 0, going to count-1.
+func Iterate(count int) []int {
+	var i int
+	var items []int
+	for i = 0; i < count; i++ {
+		items = append(items, i)
+	}
+	return items
+}
+
+// Add...adds. Nice one Go.
+func Add(a, b int) int {
+	return a + b
+}
+
 func AddDefaultData(templateData *models.TemplateData, r *http.Request) *models.TemplateData {
 	templateData.CSRFToken = nosurf.Token(r)
 	// PopString since you want to show these messages only once to the user.

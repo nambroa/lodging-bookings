@@ -439,7 +439,45 @@ func (m *Repository) AdminAllReservations(writer http.ResponseWriter, request *h
 
 // AdminReservationsCalendar displays the reservation calendar in the admin layout.
 func (m *Repository) AdminReservationsCalendar(writer http.ResponseWriter, request *http.Request) {
-	render.Template(writer, request, "admin-reservations-calendar.page.gohtml", &models.TemplateData{})
+	// Assume that there is no month or year specified.
+	now := time.Now()
+	data := map[string]interface{}{"now": now}
+
+	// If the user specified a year and a month, convert the calendar to use those instead of the current year/month.
+	if request.URL.Query().Get("y") != "" {
+		year, _ := strconv.Atoi(request.URL.Query().Get("y"))
+		month, _ := strconv.Atoi(request.URL.Query().Get("m"))
+		now = time.Date(year, time.Month(month), 1, 0, 0, 0, 0, time.UTC)
+	}
+
+	// Calculate next year/month and previous year/month. These are used to navigate the calendar.
+	next := now.AddDate(0, 1, 0)
+	last := now.AddDate(0, -1, 0)
+	nextMonth := next.Format("01")
+	nextMonthYear := next.Format("2006")
+	lastMonth := last.Format("01")
+	lastMonthYear := last.Format("2006")
+	stringMap := map[string]string{"next_month": nextMonth, "next_month_year": nextMonthYear, "last_month": lastMonth,
+		"last_month_year": lastMonthYear, "this_month": now.Format("01"), "this_month_year": now.Format("2006")}
+
+	// Get the first and last days of the month.
+	currentYear, currentMonth, _ := now.Date()
+	currentLocation := now.Location()
+	firstOfMonth := time.Date(currentYear, currentMonth, 1, 0, 0, 0, 0, currentLocation)
+	lastOfMonth := firstOfMonth.AddDate(0, 1, -1)
+
+	// Store number of days in a month.
+	intMap := map[string]int{"days_in_month": lastOfMonth.Day()}
+
+	rooms, err := m.DB.GetAllRooms()
+	if err != nil {
+		helpers.ServerError(writer, err)
+		return
+	}
+	data["rooms"] = rooms
+
+	render.Template(writer, request, "admin-reservations-calendar.page.gohtml", &models.TemplateData{StringMap: stringMap,
+		Data: data, IntMap: intMap})
 }
 
 // AdminShowReservation shows the content of a single reservation in the admin layout.
