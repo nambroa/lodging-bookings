@@ -441,7 +441,6 @@ func (m *Repository) AdminAllReservations(writer http.ResponseWriter, request *h
 func (m *Repository) AdminReservationsCalendar(writer http.ResponseWriter, request *http.Request) {
 	// Assume that there is no month or year specified.
 	now := time.Now()
-	data := map[string]interface{}{"now": now}
 
 	// If the user specified a year and a month, convert the calendar to use those instead of the current year/month.
 	if request.URL.Query().Get("y") != "" {
@@ -449,6 +448,7 @@ func (m *Repository) AdminReservationsCalendar(writer http.ResponseWriter, reque
 		month, _ := strconv.Atoi(request.URL.Query().Get("m"))
 		now = time.Date(year, time.Month(month), 1, 0, 0, 0, 0, time.UTC)
 	}
+	data := map[string]interface{}{"now": now}
 
 	// Calculate next year/month and previous year/month. These are used to navigate the calendar.
 	next := now.AddDate(0, 1, 0)
@@ -501,7 +501,7 @@ func (m *Repository) AdminReservationsCalendar(writer http.ResponseWriter, reque
 				}
 			} else {
 				// It's a block from the owner.
-				blockMap[restriction.StartDate.Format("2006-01-2")] = restriction.RestrictionID
+				blockMap[restriction.StartDate.Format("2006-01-2")] = restriction.ID
 			}
 		}
 		// Add it to the data map in order to pass it on to the template.
