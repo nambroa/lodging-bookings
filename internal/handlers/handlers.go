@@ -476,6 +476,42 @@ func (m *Repository) AdminReservationsCalendar(writer http.ResponseWriter, reque
 	}
 	data["rooms"] = rooms
 
+	// Create reservation map and block map to be used in the calendar. For each day in the map marked as 0, it means
+	// the day is available for reservation (and will not appear checked on the calendar).
+	for _, room := range rooms {
+		reservationMap := map[string]int{}
+		blockMap := map[string]int{}
+		// Iterate the whole month, one day at a time. Initialize the map as fully available.
+		for d := firstOfMonth; d.After(lastOfMonth) == false; d = d.AddDate(0, 0, 1) {
+			reservationMap[d.Format("2006-01-2")] = 0 // Room available
+			blockMap[d.Format("2006-01-2")] = 0
+		}
+		// Get the restrictions for the rooms for the current month and add them to the map.
+		restrictions, err := m.DB.GetRestrictionsForRoomByDate(room.ID, firstOfMonth, lastOfMonth)
+		if err != nil {
+			helpers.ServerError(writer, err)
+			return
+		}
+		// If the restriction is from a reservation, add it to the reservation map. Otherwise add it to the block map.
+		for _, restriction := range restrictions {
+			if restriction.ReservationID > 0 {
+				// It's a reservation
+				for d := restriction.StartDate; d.After(restriction.EndDate) == false; d = d.AddDate(0, 0, 1) {
+					reservationMap[d.Format("2006-01-2")] = restriction.ReservationID
+				}
+			} else {
+				// It's a block from the owner.
+				blockMap[restriction.StartDate.Format("2006-01-2")] = restriction.RestrictionID
+			}
+		}
+		// Add it to the data map in order to pass it on to the template.
+		data[fmt.Sprintf("reservation_map_%d", room.ID)] = reservationMap
+		data[fmt.Sprintf("block_map_%d", room.ID)] = blockMap
+		// Store the blockMap in the session, so that when the user makes changes in the calendar and posts
+		// that form, I can take this block map out of the session and compare it to the changes made by the user.
+		m.App.Session.Put(request.Context(), fmt.Sprintf("block_map_%d", room.ID), blockMap)
+	}
+
 	render.Template(writer, request, "admin-reservations-calendar.page.gohtml", &models.TemplateData{StringMap: stringMap,
 		Data: data, IntMap: intMap})
 }
