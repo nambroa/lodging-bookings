@@ -610,6 +610,56 @@ func (m *Repository) AdminPostReservationsCalendar(writer http.ResponseWriter, r
 	year, _ := strconv.Atoi(request.Form.Get("y"))
 	month, _ := strconv.Atoi(request.Form.Get("m"))
 
+	// Process Blocks.
+	rooms, err := m.DB.GetAllRooms()
+	if err != nil {
+		helpers.ServerError(writer, err)
+		return
+	}
+
+	form := forms.New(request.PostForm)
+
+	// Handle Block Deletion.
+	for _, room := range rooms {
+		// Get the block map from the session. Contains the data as it stood before the user made any changes in the
+		// calendar itself.
+		// If an entry exists in this map but not in the posted data, whose restriction id is greater than 0, we need
+		// to remove that block since this means the user unchecked it in the calendar. Restriction id greater than 0
+		// means its an owner-imposed restriction instead of a user reservation.
+		curMap := m.App.Session.Get(request.Context(), fmt.Sprintf("block_map_%d", room.ID)).(map[string]int)
+		for day, rID := range curMap {
+			// If curMap[day] does not exist, ok will be false.
+			if val, ok := curMap[day]; ok {
+				// Ok is true, so check if the value is greater than 0 and is missing in the form post.
+				// The rest are placeholders for days without blocks.
+				if val > 0 {
+					if !form.Has(fmt.Sprintf("remove_block_%d_%s", room.ID, day)) {
+						// Delete the restriction by ID.
+						err := m.DB.DeleteBlockByID(rID)
+						if err != nil {
+							log.Println(err)
+						}
+					}
+				}
+			}
+		}
+	}
+
+	// Handle Block Creation.
+	for name, _ := range request.PostForm {
+		if strings.HasPrefix(name, "add_block") {
+			// example string: add_block_1_2020-12-14 with _1_ being the room ID.
+			exploded := strings.Split(name, "_")
+			roomID, _ := strconv.Atoi(exploded[2])
+			startDate, _ := time.Parse("2006-01-2", exploded[3])
+			// Insert a new block.
+			err := m.DB.InsertBlockForRoom(roomID, startDate)
+			if err != nil {
+				log.Println(err)
+			}
+		}
+	}
+
 	m.App.Session.Put(request.Context(), "flash", "Changes saved")
 	http.Redirect(writer, request, fmt.Sprintf("/admin/reservations-calendar?y=%d&m=%d", year, month), http.StatusSeeOther)
 
