@@ -24,6 +24,17 @@ the cabin complex.
 - Notification system for guests and property owners.
 - (Admin) Review existing bookings, change or cancel them. Show a calendar of bookings.
 
+## Screenshots
+
+### Main Page
+![front_page](https://user-images.githubusercontent.com/42326233/199077353-731e0653-adbf-43a3-9f62-445521b2d2e3.png)
+
+### Admin Reservations Management
+![new_reservations_admin](https://user-images.githubusercontent.com/42326233/199077372-3aa770c5-ae12-4434-9b2e-c5d470c34b12.png)
+
+### Reservations Calendar
+![reservation_calendar_admin](https://user-images.githubusercontent.com/42326233/199077388-c31ac647-02c7-4707-9322-2ab6a3fa1788.png)
+
 ## How to Install
 
 ### DB
