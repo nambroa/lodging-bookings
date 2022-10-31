@@ -599,6 +599,22 @@ func (m *Repository) AdminDeleteReservation(writer http.ResponseWriter, request 
 
 }
 
+// AdminPostReservationsCalendar handles post requests coming from the reservation calendar in the admin layout.
+func (m *Repository) AdminPostReservationsCalendar(writer http.ResponseWriter, request *http.Request) {
+	err := request.ParseForm()
+	if err != nil {
+		helpers.ServerError(writer, err)
+		return
+	}
+
+	year, _ := strconv.Atoi(request.Form.Get("y"))
+	month, _ := strconv.Atoi(request.Form.Get("m"))
+
+	m.App.Session.Put(request.Context(), "flash", "Changes saved")
+	http.Redirect(writer, request, fmt.Sprintf("/admin/reservations-calendar?y=%d&m=%d", year, month), http.StatusSeeOther)
+
+}
+
 // parseDateFromForm converts a date extracted from an html form to a Go friendly format (usually used to query).
 func parseDateFromForm(form url.Values, dateString string) (time.Time, error) {
 	// Declare the layout that matches how the date is extracted from the form
