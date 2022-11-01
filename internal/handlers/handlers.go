@@ -129,6 +129,9 @@ func (m *Repository) PostReservation(w http.ResponseWriter, r *http.Request) {
 	reservation.LastName = r.Form.Get("last_name")
 	reservation.Email = r.Form.Get("email")
 	reservation.Phone = r.Form.Get("phone")
+	roomId, err := strconv.Atoi(r.Form.Get("room_id"))
+	room, err := m.DB.GetRoomByID(roomId)
+	reservation.Room = room
 
 	form := forms.New(r.PostForm)
 	form.Required("first_name", "last_name", "email")
